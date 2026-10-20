@@ -2,8 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-// 🌐 Termux Local Server Base URL (Updated to Wi-Fi IP)
-const String baseUrl = "http://192.168.100.5:8000";
+
+// 🌐 Termux Local Server Base URL (Localhost for same device)
+const String baseUrl = "http://127.0.0.1:8000";
 
 void main() {
   runApp(const LovelyChatApp());
