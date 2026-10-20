@@ -20,141 +20,194 @@ class LovelyChatApp extends StatelessWidget {
           secondary: const Color(0xFFFFD700), // Gold
         ),
       ),
-      home: const UserSimpleProfileScreen(),
+      home: const GoogleAuthScreen(),
     );
   }
 }
 
-class UserSimpleProfileScreen extends StatefulWidget {
-  const UserSimpleProfileScreen({super.key});
-
-  @override
-  State<UserSimpleProfileScreen> createState() => _UserSimpleProfileScreenState();
-}
-
-class _UserSimpleProfileScreenState extends State<UserSimpleProfileScreen> {
-  String linkedAgencyId = "Not Linked Yet";
-  
-  // 📊 CORRECTED BUSINESS METRICS (Super Admin Target adds to Manager Account)
-  double currentSuperAdminEarned = 0;
-  double currentManagerProgress = 0;
-  
-  final double superAdminTargetLimit = 100000000; // 100M Target
-  final double managerSalaryTargetLimit = 500000000; // 500M Target
-
-  void _simulateSuperAdminEarning() {
-    setState(() {
-      // سپر ایڈمن کا پہلا ٹارگٹ 100M مکمل ہوا
-      currentSuperAdminEarned = 100000000; 
-      
-      // 🚀 لاجک درستگی: سپر ایڈمن کا کمایا ہوا 10M ڈائمنڈز اب مینیجر کے اکاؤنٹ میں ایڈ ہوگا
-      currentManagerProgress += 10000000; 
-    });
-  }
+// 🔐 1. GOOGLE REGISTRATION FLOW
+class GoogleAuthScreen extends StatelessWidget {
+  const GoogleAuthScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lovely Chat Portal', style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold)),
-        backgroundColor: const Color(0xFF1A0033),
-        centerTitle: true,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.favorite, color: Color(0xFFFFD700), size: 100),
+            const SizedBox(height: 10),
+            const Text('Lovely Chat', style: TextStyle(color: Color(0xFFFFD700), fontSize: 36, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 60),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white, foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              ),
+              icon: const Icon(Icons.g_mobiledata, size: 30, color: Colors.red),
+              label: const Text('Continue with Google', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const UserRegistrationScreen()));
+              },
+            ),
+          ],
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+    );
+  }
+}
+
+class UserRegistrationScreen extends StatelessWidget {
+  const UserRegistrationScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Create Profile'), backgroundColor: const Color(0xFF1A0033)),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            // 👤 USER PROFILE CARD
-            Card(
-              color: const Color(0xFF250044),
-              child: ListTile(
-                leading: const CircleAvatar(backgroundColor: Color(0xFFFFD700), child: Icon(Icons.person, color: Colors.black)),
-                title: const Text('User ID: LC-381992', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                subtitle: const Text('Password: •••••••• (Google Login Active)', style: TextStyle(color: Colors.white60)),
-              ),
-            ),
+            const CircleAvatar(radius: 50, child: Icon(Icons.camera_alt, size: 30)),
             const SizedBox(height: 20),
-
-            const Text('--- Management Dashboard ---', style: TextStyle(color: Color(0xFFFFD700), fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            
-            // 👑 SUPER ADMIN CARD
-            Card(
-              color: const Color(0xFF1A0033),
-              shape: RoundedRectangleBorder(side: const BorderSide(color: Color(0xFFFFD700)), borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('👑 Super Admin Status', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    Text('Earned Target: ${(currentSuperAdminEarned / 1000000).toStringAsFixed(0)}M / 100M', style: const TextStyle(color: Colors.white70)),
-                    Text(currentSuperAdminEarned >= superAdminTargetLimit ? "10M Diamonds pushed to Manager! ✅" : "10M Diamonds locked", style: const TextStyle(color: Color(0xFFFFD700), fontSize: 13)),
-                  ],
-                ),
-              ),
-            ),
-
-            // 💼 MANAGER CARD (RECEIVES VOLUME)
-            Card(
-              color: const Color(0xFF1A0033),
-              shape: RoundedRectangleBorder(side: const BorderSide(color: Colors.purple), borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('💼 Manager Account Status', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    Text('Total Progress (Including Admin Push): ${(currentManagerProgress / 1000000).toStringAsFixed(0)}M / 500M', style: const TextStyle(color: Colors.white70)),
-                    Text('Salary Status: ${currentManagerProgress >= managerSalaryTargetLimit ? "100M Salary Unlocked! 💰" : "Salary Locked (Requires 500M total)"}', style: const TextStyle(color: Colors.green, fontSize: 13)),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // 🏢 HOST CENTER CONTROL
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFD700), foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 50)),
-              onPressed: () => _showHostCenterDialog(),
-              child: const Text('Open Host Center', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            ),
-            const SizedBox(height: 5),
-            Center(child: Text('Linked Agency ID: $linkedAgencyId', style: TextStyle(color: linkedAgencyId.contains("Not") ? Colors.red : Colors.green, fontWeight: FontWeight.bold))),
-            
+            const TextField(decoration: InputDecoration(labelText: 'Nickname', labelStyle: TextStyle(color: Colors.white70))),
+            const SizedBox(height: 15),
+            const TextField(decoration: InputDecoration(labelText: 'Birthday (YYYY/MM/DD)', labelStyle: TextStyle(color: Colors.white70))),
             const SizedBox(height: 30),
-            // سیمولیشن بٹن (ٹیسٹ کرنے کے لیے کہ ایڈمن کا ڈیٹا مینیجر میں جاتا ہے)
             ElevatedButton(
-              onPressed: _simulateSuperAdminEarning,
-              child: const Text('Simulate Admin 100M Target (Push 10M to Manager)'),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFD700), minimumSize: const Size(double.infinity, 50)),
+              child: const Text('Next', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+              onPressed: () {
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainNavigationScreen()));
+              },
             )
           ],
         ),
       ),
     );
   }
+}
 
-  void _showHostCenterDialog() {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF250044),
-        title: const Text('Enter Agency Owner ID', style: TextStyle(color: Color(0xFFFFD700))),
-        content: TextField(controller: controller, style: const TextStyle(color: Colors.white)),
-        actions: [
-          TextButton(child: const Text('Join', style: TextStyle(color: Color(0xFFFFD700))), onPressed: () {
-            if (controller.text.isNotEmpty) {
-              setState(() {
-                linkedAgencyId = controller.text;
-              });
-              Navigator.pop(context);
-            }
-          })
+// 📱 2. MAIN BOTTOM NAVIGATION (4 Butons: Live, Party, Moments, Me)
+class MainNavigationScreen extends StatefulWidget {
+  const MainNavigationScreen({super.key});
+
+  @override
+  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
+}
+
+class _MainNavigationScreenState extends State<MainNavigationScreen> {
+  int _selectedIndex = 3; // Default "Me" Panel Open
+  String userLinkedAgency = "Not Linked Yet";
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> screens = [
+      const Center(child: Text('Live Videos (TikTok Style)', style: TextStyle(color: Colors.white))),
+      const Center(child: Text('Party Audio Rooms', style: TextStyle(color: Colors.white))),
+      const Center(child: Text('Moments Stream', style: TextStyle(color: Colors.white))),
+      MeProfileTabScreen(
+        agencyId: userLinkedAgency,
+        onAgencyLinked: (id) {
+          setState(() {
+            userLinkedAgency = id;
+          });
+        },
+      ),
+    ];
+
+    return Scaffold(
+      body: screens[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: const Color(0xFF1A0033),
+        selectedItemColor: const Color(0xFFFFD700),
+        unselectedItemColor: Colors.white60,
+        currentIndex: _selectedIndex,
+        onTap: (index) => setState(() => _selectedIndex = index),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.videocam), label: 'Live'),
+          BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Party'),
+          BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Moments'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Me'),
         ],
       ),
+    );
+  }
+}
+
+// 👤 3. AWAN STYLE ME TAB
+class MeProfileTabScreen extends StatelessWidget {
+  final String agencyId;
+  final Function(String) onAgencyLinked;
+
+  const MeProfileTabScreen({super.key, required this.agencyId, required this.onAgencyLinked});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        const Card(
+          color: Color(0xFF250044),
+          child: ListTile(
+            leading: CircleAvatar(backgroundColor: Color(0xFFFFD700), child: Icon(Icons.person, color: Colors.black)),
+            title: Text('Shah G', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            subtitle: Text('ID: 1002370 • Level 15', style: TextStyle(color: Colors.white60)),
+          ),
+        ),
+        const SizedBox(height: 15),
+        _buildMenuTile(context, 'Wallet', Icons.account_balance_wallet),
+        _buildMenuTile(context, 'Store (Frames & Locks)', Icons.store),
+        
+        // 🏢 HOST CENTER LOCK LOGIC
+        Card(
+          color: const Color(0xFF1A0033),
+          shape: RoundedRectangleBorder(side: const BorderSide(color: Color(0xFFFFD700))),
+          child: ListTile(
+            leading: const Icon(Icons.campaign, color: Color(0xFFFFD700)),
+            title: const Text('Host Center', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            subtitle: Text(agencyId.contains("Not") ? "Status: Inner Agent ID Mode" : "Agency ID: $agencyId", style: const TextStyle(color: Colors.white60)),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.white),
+            onTap: () => _openHostCenterLogic(context),
+          ),
+        ),
+        _buildMenuTile(context, 'BD Center (Salary Metrics)', Icons.business_center),
+      ],
+    );
+  }
+
+  void _openHostCenterLogic(BuildContext context) {
+    if (agencyId.contains("Not")) {
+      final controller = TextEditingController();
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFF250044),
+          title: const Text('Enter Agent ID / Agency ID', style: TextStyle(color: Color(0xFFFFD700))),
+          content: TextField(controller: controller, style: const TextStyle(color: Colors.white), decoration: const InputDecoration(hintText: "Enter Agent ID to unlock")),
+          actions: [
+            TextButton(child: const Text('Join', style: TextStyle(color: Color(0xFFFFD700))), onPressed: () {
+              if (controller.text.isNotEmpty) {
+                onAgencyLinked(controller.text);
+                Navigator.pop(context);
+              }
+            })
+          ],
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Welcome to Host Portal under Agency: $agencyId')));
+    }
+  }
+
+  Widget _buildMenuTile(BuildContext context, String title, IconData icon) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.white70),
+      title: Text(title, style: const TextStyle(color: Colors.white)),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.white30),
     );
   }
 }
