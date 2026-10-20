@@ -1,4 +1,4 @@
-name: Build Lovely Chat APK
+name: love_me_chat
 
 on:
   push:
