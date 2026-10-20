@@ -2,10 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-// 🌐 Termux Local Server Base URL
-// Note: Agar Termux aur app ek hi phone par hain to 127.0.0.1 istemal karein.
-// Agar Wi-Fi IP par chalana ho to e.g. "http://192.168.1.50:8000" karein.
-const String baseUrl = "http://127.0.0.1:8000";
+// 🌐 Termux Local Server Base URL (Updated to Wi-Fi IP)
+const String baseUrl = "http://192.168.100.5:8000";
 
 void main() {
   runApp(const LovelyChatApp());
@@ -56,7 +54,11 @@ class GoogleAuthScreen extends StatelessWidget {
               icon: const Icon(Icons.g_mobiledata, size: 30, color: Colors.red),
               label: const Text('Continue with Google', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const UserRegistrationScreen()));
+                // Google Auth Simulated Success -> Moving to Profile Registration
+                Navigator.pushReplacement(
+                  context, 
+                  MaterialPageRoute(builder: (_) => const UserRegistrationScreen()),
+                );
               },
             ),
           ],
@@ -173,9 +175,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> screens = [
-      const Center(child: Text('Live Videos (TikTok Style)', style: TextStyle(color: Colors.white))),
-      const Center(child: Text('Party Audio Rooms', style: TextStyle(color: Colors.white))),
-      const Center(child: Text('Moments Stream', style: TextStyle(color: Colors.white))),
+      const Center(child: Text('Live Videos (TikTok Style)', style: TextStyle(color: Colors.white, fontSize: 18))),
+      const PartyVoiceRoomScreen(), // <-- 🎙️ Integrated Voice Party Room
+      const Center(child: Text('Moments Stream', style: TextStyle(color: Colors.white, fontSize: 18))),
       MeProfileTabScreen(
         agencyId: userLinkedAgency,
         onAgencyLinked: (id) {
@@ -206,7 +208,173 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 }
 
-// 👤 3. AWAN STYLE ME TAB
+// 🎙️ 3. PARTY VOICE ROOM SCREEN (Multi-seat Audio Lounge)
+class PartyVoiceRoomScreen extends StatefulWidget {
+  const PartyVoiceRoomScreen({super.key});
+
+  @override
+  State<PartyVoiceRoomScreen> createState() => _PartyVoiceRoomScreenState();
+}
+
+class _PartyVoiceRoomScreenState extends State<PartyVoiceRoomScreen> {
+  // Seats status: false means empty seat, true means occupied
+  final List<bool> _seats = [true, false, false, false, false, false];
+  bool _isMuted = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF16002b),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF250044),
+        title: const Text('👑 Royal Voice Party Room', style: TextStyle(color: Color(0xFFFFD700))),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline, color: Colors.white),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Welcome to Awan Style Voice Lounge!')),
+              );
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Room Banner / Host Info
+          Container(
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2c0052),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: const Color(0xFFFFD700), width: 0.5),
+            ),
+            child: Row(
+              children: const [
+                CircleAvatar(backgroundColor: Color(0xFFFFD700), child: Icon(Icons.mic, color: Colors.black)),
+                SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Shah G’s Audio Lounge', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text('Room ID: 882201 • Online: 14', style: TextStyle(color: Colors.white60, fontSize: 12)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 20),
+          const Text('Mic Seats (Audio Grid)', style: TextStyle(color: Color(0xFFFFD700), fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 15),
+
+          // 6 Audio Seats Grid
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 20,
+                mainAxisSpacing: 20,
+              ),
+              itemCount: 6,
+              itemBuilder: (context, index) {
+                bool isOccupied = _seats[index];
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _seats[index] = !_seats[index];
+                    });
+                  },
+                  child: Column(
+                    children: [
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: 30,
+                            backgroundColor: isOccupied ? const Color(0xFFFFD700) : const Color(0xFF3b006b),
+                            child: Icon(
+                              isOccupied ? Icons.person : Icons.add,
+                              color: isOccupied ? Colors.black : Colors.white38,
+                              size: 30,
+                            ),
+                          ),
+                          if (isOccupied && index == 0)
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                                child: const Icon(Icons.star, size: 12, color: Colors.white),
+                              ),
+                            )
+                        ],
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        index == 0 ? 'Host (Shah G)' : (isOccupied ? 'Speaker $index' : 'Empty Seat'),
+                        style: const TextStyle(color: Colors.white70, fontSize: 11),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+
+          const Spacer(),
+
+          // Bottom Control Bar (Mute, Chat, Send Gift)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+            decoration: const BoxDecoration(
+              color: Color(0xFF250044),
+              borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                IconButton(
+                  icon: Icon(_isMuted ? Icons.mic_off : Icons.mic, color: _isMuted ? Colors.red : Color(0xFFFFD700)),
+                  onPressed: () {
+                    setState(() {
+                      _isMuted = !_isMuted;
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(_isMuted ? 'Mic Muted' : 'Mic Unmuted')),
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.card_giftcard, color: Color(0xFFFFD700)),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Gift Gallery opened!')),
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
+                  onPressed: () {
+                    // Chat Sheet
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// 👤 4. AWAN STYLE ME TAB
 class MeProfileTabScreen extends StatelessWidget {
   final String agencyId;
   final Function(String) onAgencyLinked;
@@ -231,6 +399,7 @@ class MeProfileTabScreen extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        const SizedBox(height: 20),
         const Card(
           color: Color(0xFF250044),
           child: ListTile(
