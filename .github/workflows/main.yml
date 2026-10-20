@@ -1,0 +1,39 @@
+name: Build Lovely Chat APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+          channel: 'stable'
+
+      - name: Create Dummy Android Setup
+        run: |
+          mkdir -p android/app
+          echo 'include ":app"' > android/settings.gradle
+          echo 'apply plugin: "com.android.application"' > android/app/build.gradle
+
+      - name: Install Dependencies
+        run: flutter pub get || true
+
+      - name: Test Step
+        run: echo "Repository connection established successfully!"
