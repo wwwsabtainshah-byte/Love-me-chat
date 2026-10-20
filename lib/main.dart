@@ -1,4 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+// 🌐 Termux Local Server Base URL
+// Note: Agar Termux aur app ek hi phone par hain to 127.0.0.1 istemal karein.
+// Agar Wi-Fi IP par chalana ho to e.g. "http://192.168.1.50:8000" karein.
+const String baseUrl = "http://127.0.0.1:8000";
 
 void main() {
   runApp(const LovelyChatApp());
@@ -59,8 +66,61 @@ class GoogleAuthScreen extends StatelessWidget {
   }
 }
 
-class UserRegistrationScreen extends StatelessWidget {
+class UserRegistrationScreen extends StatefulWidget {
   const UserRegistrationScreen({super.key});
+
+  @override
+  State<UserRegistrationScreen> createState() => _UserRegistrationScreenState();
+}
+
+class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
+  final TextEditingController _nicknameController = TextEditingController();
+  final TextEditingController _dobController = TextEditingController();
+  bool _isLoading = false;
+
+  // 📡 Termux Server ko User Profile ka Data bhejney ka Function
+  Future<void> _registerUserOnServer() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/register'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'nickname': _nicknameController.text,
+          'birthday': _dobController.text,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Server connected: Profile saved successfully!')),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Server status: ${response.statusCode}')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Connecting via Offline Mode (Termux error: $e)')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        Navigator.pushReplacement(
+          context, 
+          MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,16 +132,24 @@ class UserRegistrationScreen extends StatelessWidget {
           children: [
             const CircleAvatar(radius: 50, child: Icon(Icons.camera_alt, size: 30)),
             const SizedBox(height: 20),
-            const TextField(decoration: InputDecoration(labelText: 'Nickname', labelStyle: TextStyle(color: Colors.white70))),
+            TextField(
+              controller: _nicknameController,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(labelText: 'Nickname', labelStyle: TextStyle(color: Colors.white70)),
+            ),
             const SizedBox(height: 15),
-            const TextField(decoration: InputDecoration(labelText: 'Birthday (YYYY/MM/DD)', labelStyle: TextStyle(color: Colors.white70))),
+            TextField(
+              controller: _dobController,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(labelText: 'Birthday (YYYY/MM/DD)', labelStyle: TextStyle(color: Colors.white70)),
+            ),
             const SizedBox(height: 30),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFD700), minimumSize: const Size(double.infinity, 50)),
-              child: const Text('Next', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-              onPressed: () {
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainNavigationScreen()));
-              },
+              onPressed: _isLoading ? null : _registerUserOnServer,
+              child: _isLoading 
+                ? const CircularProgressIndicator(color: Colors.black)
+                : const Text('Next', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
             )
           ],
         ),
@@ -90,7 +158,7 @@ class UserRegistrationScreen extends StatelessWidget {
   }
 }
 
-// 📱 2. MAIN BOTTOM NAVIGATION (4 Butons: Live, Party, Moments, Me)
+// 📱 2. MAIN BOTTOM NAVIGATION (4 Buttons: Live, Party, Moments, Me)
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
 
@@ -145,6 +213,19 @@ class MeProfileTabScreen extends StatelessWidget {
 
   const MeProfileTabScreen({super.key, required this.agencyId, required this.onAgencyLinked});
 
+  // 📡 Termux Server par Agent / Agency ID link karne ka Function
+  Future<void> _sendAgencyToServer(String id, BuildContext context) async {
+    try {
+      await http.post(
+        Uri.parse('$baseUrl/api/link-agency'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'agency_id': id}),
+      );
+    } catch (e) {
+      print("Local Server offline, saved locally.");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -189,12 +270,16 @@ class MeProfileTabScreen extends StatelessWidget {
           title: const Text('Enter Agent ID / Agency ID', style: TextStyle(color: Color(0xFFFFD700))),
           content: TextField(controller: controller, style: const TextStyle(color: Colors.white), decoration: const InputDecoration(hintText: "Enter Agent ID to unlock")),
           actions: [
-            TextButton(child: const Text('Join', style: TextStyle(color: Color(0xFFFFD700))), onPressed: () {
-              if (controller.text.isNotEmpty) {
-                onAgencyLinked(controller.text);
-                Navigator.pop(context);
+            TextButton(
+              child: const Text('Join', style: TextStyle(color: Color(0xFFFFD700))), 
+              onPressed: () {
+                if (controller.text.isNotEmpty) {
+                  onAgencyLinked(controller.text);
+                  _sendAgencyToServer(controller.text, context);
+                  Navigator.pop(context);
+                }
               }
-            })
+            )
           ],
         ),
       );
