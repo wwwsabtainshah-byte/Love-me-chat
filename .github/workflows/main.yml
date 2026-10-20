@@ -26,17 +26,16 @@ jobs:
           flutter-version: '3.19.0'
           channel: 'stable'
 
-      - name: Create Dummy Android Directory
+      - name: Recreate Android Project Directory
         run: |
-          mkdir -p android/app
-          echo 'include ":app"' > android/settings.gradle
-          echo 'apply plugin: "com.android.application"' > android/app/build.gradle
+          rm -rf android pubspec.lock
+          flutter create . --platform=android --project-name=love_me_chat
 
       - name: Install Dependencies
-        run: flutter pub get || true
+        run: flutter pub get
 
       - name: Build Android APK
-        run: flutter build apk --release || true
+        run: flutter build apk --release
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
